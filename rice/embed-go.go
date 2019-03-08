@@ -93,6 +93,9 @@ func writeBoxesGo(pkg *build.Package, out io.Writer) error {
 					parentDir.ChildDirs = append(parentDir.ChildDirs, dirData)
 				}
 			} else {
+				if filepath.Ext(filename) == ".go" {
+					return nil
+				}
 				fileData := &fileDataType{
 					Identifier: "file" + nextIdentifier(),
 					FileName:   filename,
