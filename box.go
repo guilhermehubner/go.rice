@@ -18,6 +18,7 @@ import (
 // It can either load files from disk, or from embedded code (when `rice --embed` was ran).
 type Box struct {
 	name         string
+	path         string
 	absolutePath string
 	embed        *embedded.EmbeddedBox
 	appendd      *appendedBox
@@ -25,12 +26,12 @@ type Box struct {
 
 var defaultLocateOrder = []LocateMethod{LocateEmbedded, LocateAppended, LocateFS}
 
-func findBox(name string, order []LocateMethod) (*Box, error) {
-	b := &Box{name: name}
+func findBox(name, path string, order []LocateMethod) (*Box, error) {
+	b := &Box{name: name, path: path}
 
 	// no support for absolute paths since gopath can be different on different machines.
 	// therefore, required box must be located relative to package requiring it.
-	if filepath.IsAbs(name) {
+	if filepath.IsAbs(path) {
 		return nil, errors.New("given name/path is absolute")
 	}
 
@@ -44,7 +45,7 @@ func findBox(name string, order []LocateMethod) (*Box, error) {
 			}
 
 		case LocateAppended:
-			appendedBoxName := strings.Replace(name, `/`, `-`, -1)
+			appendedBoxName := strings.Replace(path, `/`, `-`, -1)
 			if appendd := appendedBoxes[appendedBoxName]; appendd != nil {
 				b.appendd = appendd
 				return b, nil
@@ -88,7 +89,7 @@ func findBox(name string, order []LocateMethod) (*Box, error) {
 	}
 
 	if err == nil {
-		err = fmt.Errorf("could not locate box %q", name)
+		err = fmt.Errorf("could not locate box %q", path)
 	}
 
 	return nil, err
@@ -98,14 +99,14 @@ func findBox(name string, order []LocateMethod) (*Box, error) {
 // When the given name is a relative path, it's base path will be the calling pkg/cmd's source root.
 // When the given name is absolute, it's absolute. derp.
 // Make sure the path doesn't contain any sensitive information as it might be placed into generated go source (embedded).
-func FindBox(name string) (*Box, error) {
-	return findBox(name, defaultLocateOrder)
+func FindBox(name, path string) (*Box, error) {
+	return findBox(name, path, defaultLocateOrder)
 }
 
 // MustFindBox returns a Box instance for given name, like FindBox does.
 // It does not return an error, instead it panics when an error occurs.
-func MustFindBox(name string) *Box {
-	box, err := findBox(name, defaultLocateOrder)
+func MustFindBox(name, path string) *Box {
+	box, err := findBox(name, path, defaultLocateOrder)
 	if err != nil {
 		panic(err)
 	}
@@ -134,7 +135,7 @@ var resolveAbsolutePathFromCaller = func(name string, nStackFrames int) (string,
 }
 
 func (b *Box) resolveAbsolutePathFromCaller() error {
-	path, err := resolveAbsolutePathFromCaller(b.name, 4)
+	path, err := resolveAbsolutePathFromCaller(b.path, 4)
 	if err != nil {
 		return err
 	}
@@ -148,7 +149,7 @@ func (b *Box) resolveAbsolutePathFromWorkingDirectory() error {
 	if err != nil {
 		return err
 	}
-	b.absolutePath = filepath.Join(path, b.name)
+	b.absolutePath = filepath.Join(path, b.path)
 	return nil
 }
 

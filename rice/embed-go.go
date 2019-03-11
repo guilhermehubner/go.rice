@@ -14,7 +14,7 @@ import (
 	"strings"
 )
 
-const boxFilename = "rice-box.go"
+const boxFilename = "000_rice-box.go"
 
 // errEmptyBox is returned by writeBoxesGo when no calls to rice.FindBox
 // are found in the package.
@@ -31,9 +31,9 @@ func writeBoxesGo(pkg *build.Package, out io.Writer) error {
 
 	var boxes []*boxDataType
 
-	for boxname := range boxMap {
+	for boxname, boxPath := range boxMap {
 		// find path and filename for this box
-		boxPath := filepath.Join(pkg.Dir, boxname)
+		boxPath := filepath.Join(pkg.Dir, boxPath)
 
 		// Check to see if the path for the box is a symbolic link.  If so, simply
 		// box what the symbolic link points to.  Note: the filepath.Walk function

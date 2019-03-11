@@ -23,15 +23,15 @@ type Config struct {
 }
 
 // FindBox searches for boxes using the LocateOrder of the config.
-func (c *Config) FindBox(boxName string) (*Box, error) {
-	return findBox(boxName, c.LocateOrder)
+func (c *Config) FindBox(name, path string) (*Box, error) {
+	return findBox(name, path, c.LocateOrder)
 }
 
 // MustFindBox searches for boxes using the LocateOrder of the config, like
 // FindBox does.  It does not return an error, instead it panics when an error
 // occurs.
-func (c *Config) MustFindBox(boxName string) *Box {
-	box, err := findBox(boxName, c.LocateOrder)
+func (c *Config) MustFindBox(name, path string) *Box {
+	box, err := findBox(name, path, c.LocateOrder)
 	if err != nil {
 		panic(err)
 	}

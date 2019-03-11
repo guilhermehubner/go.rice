@@ -18,7 +18,7 @@ func operationClean(pkg *build.Package) {
 			return nil
 		}
 		verbosef("checking file '%s'\n", filename)
-		if filepath.Base(filename) == "rice-box.go" ||
+		if filepath.Base(filename) == "000_rice-box.go" ||
 			strings.HasSuffix(filename, ".rice-box.go") ||
 			strings.HasSuffix(filename, ".rice-box.syso") {
 			err := os.Remove(filename)

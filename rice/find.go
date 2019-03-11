@@ -27,9 +27,9 @@ func badArgument(fileset *token.FileSet, p token.Pos) {
 	os.Exit(1)
 }
 
-func findBoxes(pkg *build.Package) map[string]bool {
+func findBoxes(pkg *build.Package) map[string]string {
 	// create map of boxes to embed
-	var boxMap = make(map[string]bool)
+	var boxMap = make(map[string]string)
 
 	// create one list of files for this package
 	filenames := make([]string, 0, len(pkg.GoFiles)+len(pkg.CgoFiles))
@@ -40,7 +40,7 @@ func findBoxes(pkg *build.Package) map[string]bool {
 	for _, filename := range filenames {
 		// find full filepath
 		fullpath := filepath.Join(pkg.Dir, filename)
-		if strings.HasSuffix(filename, "rice-box.go") {
+		if strings.HasSuffix(filename, "000_rice-box.go") {
 			// Ignore *.rice-box.go files
 			verbosef("skipping file %q\n", fullpath)
 			continue
@@ -79,8 +79,10 @@ func findBoxes(pkg *build.Package) map[string]bool {
 		// Identifiers won't be resolved.
 		var nextIdentIsBoxFunc bool
 		var nextBasicLitParamIsBoxName bool
+		var nextBasicLitParamIsBoxPath bool
 		var boxCall token.Pos
 		var validVariablesForBoxes = make(map[string]bool)
+		var boxName string
 
 		ast.Inspect(f, func(node ast.Node) bool {
 			if node == nil {
@@ -123,10 +125,20 @@ func findBoxes(pkg *build.Package) map[string]bool {
 				if nextBasicLitParamIsBoxName {
 					if x.Kind == token.STRING {
 						nextBasicLitParamIsBoxName = false
+						nextBasicLitParamIsBoxPath = true
 						// trim "" or ``
-						name := x.Value[1 : len(x.Value)-1]
-						boxMap[name] = true
-						verbosef("\tfound box %q\n", name)
+						boxName = x.Value[1 : len(x.Value)-1]
+						boxMap[boxName] = ""
+						verbosef("\tfound box %q\n", boxName)
+					} else {
+						badArgument(fset, boxCall)
+					}
+				} else if nextBasicLitParamIsBoxPath {
+					if x.Kind == token.STRING {
+						nextBasicLitParamIsBoxPath = false
+						// trim "" or ``
+						path := x.Value[1 : len(x.Value)-1]
+						boxMap[boxName] = path
 					} else {
 						badArgument(fset, boxCall)
 					}
